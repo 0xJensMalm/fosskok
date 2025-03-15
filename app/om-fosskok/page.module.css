@@ -3,6 +3,7 @@
   flex-direction: column;
   max-width: 1000px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .title {
@@ -67,5 +68,25 @@
 @media (max-width: 768px) {
   .content {
     grid-template-columns: 1fr;
+  }
+  
+  .title {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .description p {
+    text-align: center;
+  }
+  
+  .infoBox {
+    margin-top: 2rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .infoItem {
+    align-items: center;
   }
 }

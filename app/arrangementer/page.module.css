@@ -3,7 +3,7 @@
   flex-direction: column;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 0;
+  padding: 2rem 1rem;
 }
 
 .eventsGrid {
@@ -138,6 +138,7 @@
   background-color: #333;
 }
 
+/* Mobile styles - force single column layout */
 @media (max-width: 900px) {
   .eventsGrid {
     grid-template-columns: repeat(2, 1fr);
@@ -147,5 +148,30 @@
 @media (max-width: 600px) {
   .eventsGrid {
     grid-template-columns: 1fr;
+  }
+  
+  .container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .eventCard {
+    min-height: auto;
+  }
+  
+  .eventTitle {
+    font-size: 1rem;
+  }
+  
+  .eventDate {
+    padding: 1rem 0;
+  }
+  
+  .day {
+    font-size: 1.6rem;
+  }
+  
+  .calendarButton {
+    width: 100%;
+    justify-content: center;
   }
 }

@@ -40,3 +40,39 @@ a {
   flex-direction: column;
   min-height: 100vh;
 }
+
+/* Add responsive viewport meta tag */
+@viewport {
+  width: device-width;
+  initial-scale: 1;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Ensure images are responsive */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button, 
+  input, 
+  select, 
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
