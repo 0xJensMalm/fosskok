@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "title": "Åpningsutstilling",
+    "date": "2025-04-15T18:00:00",
+    "endDate": "2025-04-15T21:00:00",
+    "location": "Fosskok Galleri",
+    "description": "Velkommen til åpningen av vårt nye galleri. Vi feirer med utstilling av lokale kunstnere og lett servering.",
+    "imageUrl": "/placeholder-event.jpg"
+  },
+  {
+    "id": 2,
+    "title": "Konsert med Sofie Larsen",
+    "date": "2025-05-10T19:30:00",
+    "endDate": "2025-05-10T22:00:00",
+    "location": "Fosskok Scene",
+    "description": "En intim konsert med vår egen Sofie Larsen. Hun vil fremføre nye komposisjoner inspirert av naturen rundt Fosskok.",
+    "imageUrl": "/placeholder-event.jpg"
+  }
+]
