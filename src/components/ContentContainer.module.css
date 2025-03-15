@@ -1,0 +1,11 @@
+.contentContainer {
+  flex: 1;
+  background-color: #faf9f6; /* Off-white background */
+  min-height: 70vh; /* Ensure minimum height for content area */
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}

@@ -1,0 +1,19 @@
+.footer {
+  width: 100%;
+  padding: 2rem 0;
+  background-color: #faf9f6; /* Off-white background */
+  margin-top: auto; /* Push footer to bottom */
+}
+
+.footerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  text-align: center;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.footerContent p {
+  margin: 0;
+}
