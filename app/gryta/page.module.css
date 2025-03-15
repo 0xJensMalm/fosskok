@@ -11,6 +11,7 @@
   font-weight: 700;
   margin-bottom: 1rem;
   color: var(--foreground);
+  text-align: center;
 }
 
 .content {
@@ -132,6 +133,20 @@
   font-size: 0.9rem !important;
   color: var(--accent) !important;
   font-weight: 500;
+}
+
+.stayTuned {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.stayTuned p {
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--accent);
+  font-style: italic;
 }
 
 @media (max-width: 768px) {
