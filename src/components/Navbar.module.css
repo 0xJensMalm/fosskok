@@ -19,6 +19,7 @@
   display: flex;
   gap: 2rem;
   flex: 1;
+  align-items: center;
 }
 
 .navLeft {
@@ -69,6 +70,30 @@
 /* Active page will have static underline */
 .navLink[aria-current="page"]:after {
   width: 100%;
+}
+
+/* Social media icons */
+.socialIcons {
+  display: flex;
+  gap: 0.8rem;
+  margin-left: 12rem;
+}
+
+.socialIcon {
+  color: #333;
+  transition: color 0.2s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.socialIcon:hover {
+  color: #666;
+  transform: scale(1.1);
+}
+
+.mobileSocialContainer {
+  margin-top: 1rem;
 }
 
 .divider {
@@ -194,5 +219,16 @@
   
   .logo {
     font-size: 1.8rem;
+  }
+  
+  .mobileSocialContainer .socialIcons {
+    margin-top: 1rem;
+    gap: 2rem;
+    
+  }
+  
+  .mobileSocialContainer .socialIcon svg {
+    width: 24px;
+    height: 24px;
   }
 }
