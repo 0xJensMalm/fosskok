@@ -3,7 +3,7 @@
   flex-direction: column;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 3rem 1rem;
 }
 
 .title {
@@ -15,20 +15,26 @@
 
 .content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 3rem;
+  align-items: flex-start;
 }
 
 .description {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.8rem;
 }
 
 .description p {
   font-size: 1.1rem;
   line-height: 1.7;
   color: var(--foreground);
+}
+
+.description p:first-child {
+  font-size: 1.2rem;
+  font-weight: 500;
 }
 
 .infoBox {
@@ -38,8 +44,11 @@
   padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.8rem;
   height: fit-content;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 2rem;
 }
 
 .infoBox h2 {
@@ -47,6 +56,8 @@
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: var(--foreground);
+  border-bottom: 1px solid var(--divider);
+  padding-bottom: 0.8rem;
 }
 
 .infoItem {
@@ -58,16 +69,40 @@
 .infoItem strong {
   font-weight: 600;
   color: var(--foreground);
+  font-size: 1.05rem;
 }
 
 .infoItem p {
   margin: 0;
   color: var(--accent);
+  line-height: 1.5;
+}
+
+.mapContainer {
+  margin-top: 0.5rem;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.googleMap {
+  border-radius: 8px;
+  transition: opacity 0.3s ease;
+}
+
+.googleMap:hover {
+  opacity: 0.95;
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 2rem 1rem;
+  }
+  
   .content {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
   
   .title {
@@ -81,12 +116,19 @@
   }
   
   .infoBox {
-    margin-top: 2rem;
+    margin-top: 1rem;
     align-items: center;
     text-align: center;
+    position: static;
   }
   
   .infoItem {
     align-items: center;
+  }
+  
+  .mapContainer {
+    width: 100%;
+    max-width: 450px;
+    margin: 1rem auto 0;
   }
 }
