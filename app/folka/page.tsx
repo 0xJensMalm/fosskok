@@ -38,7 +38,6 @@ export default function Folka() {
   return (
     <ContentContainer>
       <div className={styles.container}>
-        <h1 className={styles.title}>Folka</h1>
         <p className={styles.intro}>
           Møt menneskene bak Fosskok - en samling av kunstnere, musikere, forfattere og kreative sjeler.
         </p>

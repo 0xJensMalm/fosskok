@@ -45,14 +45,15 @@
   text-decoration: none;
   font-size: 1rem;
   font-weight: 500;
-  transition: color 0.2s ease;
   position: relative;
 }
 
+/* Remove hover color change */
 .navLink:hover {
-  color: #666;
+  color: #333;
 }
 
+/* Remove animation for underline */
 .navLink:after {
   content: '';
   position: absolute;
@@ -61,10 +62,10 @@
   bottom: -5px;
   left: 0;
   background-color: #333;
-  transition: width 0.3s ease;
 }
 
-.navLink:hover:after {
+/* Active page will have static underline */
+.navLink[aria-current="page"]:after {
   width: 100%;
 }
 
