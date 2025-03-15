@@ -3,21 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './events.module.css';
 
 type Event = {
   id: number;
   title: string;
   date: string;
+  endDate: string | null;
   location: string;
+  address: string;
   description: string;
-  imageUrl?: string;
 };
 
 export default function EventsAdmin() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentEvent, setCurrentEvent] = useState<Event | null>(null);
   const router = useRouter();
@@ -25,9 +27,11 @@ export default function EventsAdmin() {
   // Form state
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [location, setLocation] = useState('');
+  const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -73,35 +77,12 @@ export default function EventsAdmin() {
   const handleEdit = (event: Event) => {
     setCurrentEvent(event);
     setTitle(event.title);
-    setDate(formatDateForInput(event.date));
+    setDate(event.date);
+    setEndDate(event.endDate ?? '');
     setLocation(event.location);
+    setAddress(event.address);
     setDescription(event.description);
-    setImageUrl(event.imageUrl || '');
     setIsEditing(true);
-  };
-
-  // Format date from ISO string to YYYY-MM-DD for input field
-  const formatDateForInput = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toISOString().split('T')[0];
-    } catch (e) {
-      return '';
-    }
-  };
-
-  // Format date for display
-  const formatDateForDisplay = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('no-NO', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
-    } catch (e) {
-      return dateString;
-    }
   };
 
   const handleDelete = async (id: number) => {
@@ -129,16 +110,25 @@ export default function EventsAdmin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const eventData = {
-      id: currentEvent?.id,
-      title,
-      date: new Date(date).toISOString(),
-      location,
-      description,
-      imageUrl: imageUrl || undefined,
-    };
+    if (!title || !date || !location || !address || !description) {
+      setError('Alle feltene må fylles ut');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setError(null);
     
     try {
+      const eventData = {
+        id: currentEvent?.id,
+        title,
+        date,
+        endDate: endDate || undefined,
+        location,
+        address,
+        description
+      };
+      
       const method = isEditing ? 'PUT' : 'POST';
       const response = await fetch('/api/admin/events', {
         method,
@@ -158,17 +148,21 @@ export default function EventsAdmin() {
     } catch (err) {
       setError(`Failed to ${isEditing ? 'update' : 'create'} event. Please try again.`);
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const resetForm = () => {
-    setCurrentEvent(null);
     setTitle('');
     setDate('');
+    setEndDate('');
     setLocation('');
+    setAddress('');
     setDescription('');
-    setImageUrl('');
     setIsEditing(false);
+    setCurrentEvent(null);
+    setError(null);
   };
 
   if (loading) {
@@ -189,7 +183,10 @@ export default function EventsAdmin() {
           <h1>Administrer arrangementer</h1>
         </div>
         <button 
-          onClick={() => setIsEditing(false)} 
+          onClick={() => {
+            resetForm();
+            setIsEditing(false);
+          }} 
           className={styles.addButton}
         >
           Legg til nytt arrangement
@@ -228,6 +225,17 @@ export default function EventsAdmin() {
             </div>
             
             <div className={styles.formGroup}>
+              <label htmlFor="endDate">Sluttdato</label>
+              <input
+                type="date"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className={styles.input}
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
               <label htmlFor="location">Sted</label>
               <input
                 type="text"
@@ -240,40 +248,42 @@ export default function EventsAdmin() {
             </div>
             
             <div className={styles.formGroup}>
+              <label htmlFor="address">Adresse</label>
+              <input
+                type="text"
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+                className={styles.input}
+              />
+            </div>
+            
+            <div className={styles.formGroup}>
               <label htmlFor="description">Beskrivelse</label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                placeholder="Skriv en beskrivelse av arrangementet"
                 required
-                className={styles.textarea}
-                rows={5}
               />
             </div>
             
-            <div className={styles.formGroup}>
-              <label htmlFor="imageUrl">Bilde URL (valgfritt)</label>
-              <input
-                type="text"
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className={styles.input}
-              />
-            </div>
-            
-            <div className={styles.formButtons}>
-              <button type="submit" className={styles.submitButton}>
-                {isEditing ? 'Oppdater' : 'Legg til'}
+            <div className={styles.formActions}>
+              <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+                {isSubmitting ? 'Lagrer...' : isEditing ? 'Oppdater arrangement' : 'Legg til arrangement'}
               </button>
-              
-              <button 
-                type="button" 
-                onClick={resetForm} 
-                className={styles.cancelButton}
-              >
-                Avbryt
-              </button>
+              {isEditing && (
+                <button 
+                  type="button" 
+                  className={styles.cancelButton} 
+                  onClick={resetForm}
+                >
+                  Avbryt
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -307,10 +317,18 @@ export default function EventsAdmin() {
                   
                   <div className={styles.eventDetails}>
                     <p className={styles.eventDate}>
-                      <strong>Dato:</strong> {formatDateForDisplay(event.date)}
+                      <strong>Dato:</strong> {event.date}
                     </p>
+                    {event.endDate && (
+                      <p className={styles.eventEndDate}>
+                        <strong>Sluttdato:</strong> {event.endDate}
+                      </p>
+                    )}
                     <p className={styles.eventLocation}>
                       <strong>Sted:</strong> {event.location}
+                    </p>
+                    <p className={styles.eventAddress}>
+                      <strong>Adresse:</strong> {event.address}
                     </p>
                     <p className={styles.eventDescription}>
                       {event.description.length > 150 

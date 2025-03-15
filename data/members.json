@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "name": "Leo Geller",
+    "role": "Musiker",
+    "imageUrl": "/uploads/1742054888311-leo.png",
+    "color": "#FFF176",
+    "id": 1
+  }
+]

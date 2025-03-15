@@ -38,7 +38,7 @@
 }
 
 .addButton {
-  background-color: #333;
+  background-color: #4a6741;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -49,7 +49,7 @@
 }
 
 .addButton:hover {
-  background-color: #555;
+  background-color: #3a5331;
 }
 
 .content {
@@ -123,7 +123,7 @@
 
 .submitButton {
   padding: 0.75rem 1.5rem;
-  background-color: #333;
+  background-color: #4a6741;
   color: white;
   border: none;
   border-radius: 4px;
@@ -133,7 +133,7 @@
 }
 
 .submitButton:hover {
-  background-color: #555;
+  background-color: #3a5331;
 }
 
 .cancelButton {
@@ -177,6 +177,26 @@
   margin-bottom: 0.75rem;
 }
 
+.eventTitleContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.eventImageContainer {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.eventImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .eventHeader h3 {
   margin: 0;
   font-size: 1.1rem;
@@ -186,6 +206,33 @@
 .eventActions {
   display: flex;
   gap: 0.5rem;
+}
+
+.editButton, .deleteButton {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.editButton:hover {
+  background-color: #e0e0e0;
+}
+
+.deleteButton {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.deleteButton:hover {
+  background-color: #ffcdd2;
 }
 
 .eventDetails {
@@ -202,62 +249,30 @@
   line-height: 1.4;
 }
 
-.editButton {
-  padding: 0.5rem 0.75rem;
-  background-color: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.editButton:hover {
-  background-color: #eee;
-}
-
-.deleteButton {
-  padding: 0.5rem 0.75rem;
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ffcdd2;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.deleteButton:hover {
-  background-color: #ffcdd2;
-}
-
-.error {
-  padding: 0.75rem;
-  background-color: #ffebee;
-  color: #c62828;
-  border-radius: 4px;
-  margin: 1rem 2rem;
-  font-size: 0.9rem;
-}
-
-.emptyMessage {
-  color: #777;
-  font-style: italic;
-  margin-top: 1rem;
-}
-
 .loadingContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f5f5;
 }
 
 .loading {
   font-size: 1.2rem;
-  color: #555;
+  color: #666;
+}
+
+.error {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 2rem;
+}
+
+.emptyMessage {
+  color: #666;
+  font-style: italic;
+  margin-top: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -265,23 +280,7 @@
     flex-direction: column;
   }
   
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .headerLeft {
-    align-items: center;
-  }
-  
-  .eventHeader {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  
-  .eventActions {
+  .formSection, .listSection {
     width: 100%;
-    justify-content: flex-end;
   }
 }

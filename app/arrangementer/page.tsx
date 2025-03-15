@@ -12,7 +12,6 @@ interface Event {
   endDate?: string;
   location: string;
   description: string;
-  imageUrl?: string;
   address: string;
 }
 

@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './members.module.css';
+import ImageUploader from '@/src/components/admin/ImageUploader';
 
 type Member = {
   id: number;
@@ -37,6 +39,7 @@ export default function MembersAdmin() {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
 
   useEffect(() => {
     // Check if user is authenticated
@@ -84,6 +87,7 @@ export default function MembersAdmin() {
     setName(member.name);
     setRole(member.role);
     setImageUrl(member.imageUrl || '');
+    setSelectedColor(member.color || '');
     setIsEditing(true);
   };
 
@@ -116,7 +120,8 @@ export default function MembersAdmin() {
       id: currentMember?.id,
       name,
       role,
-      imageUrl,
+      imageUrl: imageUrl || '/placeholder-person.svg',
+      color: selectedColor || getRandomColor()
     };
     
     try {
@@ -147,6 +152,7 @@ export default function MembersAdmin() {
     setName('');
     setRole('');
     setImageUrl('');
+    setSelectedColor('');
     setIsEditing(false);
   };
 
@@ -154,6 +160,11 @@ export default function MembersAdmin() {
   const getRandomColor = () => {
     const randomIndex = Math.floor(Math.random() * colorPalette.length);
     return colorPalette[randomIndex];
+  };
+
+  // Handle image upload
+  const handleImageUpload = (imagePath: string) => {
+    setImageUrl(imagePath);
   };
 
   if (loading) {
@@ -174,7 +185,10 @@ export default function MembersAdmin() {
           <h1>Administrer medlemmer</h1>
         </div>
         <button 
-          onClick={() => setIsEditing(false)} 
+          onClick={() => {
+            resetForm();
+            setIsEditing(false);
+          }} 
           className={styles.addButton}
         >
           Legg til nytt medlem
@@ -213,16 +227,27 @@ export default function MembersAdmin() {
             </div>
             
             <div className={styles.formGroup}>
-              <label htmlFor="imageUrl">Bilde URL</label>
-              <input
-                type="text"
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="/placeholder-person.jpg"
-                className={styles.input}
+              <label>Bilde (400x400 px anbefalt)</label>
+              <ImageUploader 
+                currentImage={imageUrl || '/placeholder-person.svg'} 
+                onImageUpload={handleImageUpload}
+                label="Last opp bilde (400x400 px anbefalt)"
               />
-              <small>La stå tom for å bruke standard platsholder med tilfeldig farge</small>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label>Farge</label>
+              <div className={styles.colorPicker}>
+                {colorPalette.map((color) => (
+                  <div 
+                    key={color}
+                    className={`${styles.colorOption} ${selectedColor === color ? styles.selectedColor : ''}`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  />
+                ))}
+              </div>
+              <small>Velg en farge for medlemmet, eller la stå tom for tilfeldig farge</small>
             </div>
             
             <div className={styles.formButtons}>
@@ -249,33 +274,29 @@ export default function MembersAdmin() {
           ) : (
             <div className={styles.membersList}>
               {members.map((member) => (
-                <div key={member.id} className={styles.memberCard}>
-                  {member.imageUrl ? (
-                    <div 
+                <div key={member.id} className={styles.memberCard} style={{ borderColor: member.color || '#ccc' }}>
+                  <div className={styles.memberImageContainer} style={{ backgroundColor: member.color || '#f0f0f0' }}>
+                    <Image
+                      src={member.imageUrl || '/placeholder-person.svg'}
+                      alt={member.name}
+                      width={60}
+                      height={60}
                       className={styles.memberImage}
-                      style={{ backgroundImage: `url(${member.imageUrl})` }}
                     />
-                  ) : (
-                    <div 
-                      className={styles.memberColor} 
-                      style={{ backgroundColor: member.color || getRandomColor() }}
-                    >
-                      {member.name.charAt(0)}
-                    </div>
-                  )}
+                  </div>
                   <div className={styles.memberInfo}>
                     <h3>{member.name}</h3>
                     <p>{member.role}</p>
                   </div>
                   <div className={styles.memberActions}>
                     <button 
-                      onClick={() => handleEdit(member)}
+                      onClick={() => handleEdit(member)} 
                       className={styles.editButton}
                     >
                       Rediger
                     </button>
                     <button 
-                      onClick={() => handleDelete(member.id)}
+                      onClick={() => handleDelete(member.id)} 
                       className={styles.deleteButton}
                     >
                       Slett

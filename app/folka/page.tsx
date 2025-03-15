@@ -36,21 +36,22 @@ export default async function Folka() {
           {members.map((member: Member) => (
             <div key={member.id} className={styles.memberCard}>
               <div className={styles.memberImageContainer}>
-                <div 
-                  className={styles.memberImagePlaceholder}
-                  style={{ backgroundColor: member.color }}
-                >
-                  {member.name.charAt(0)}
-                </div>
-                {/* When you have actual images, use this instead:
-                <Image 
-                  src={member.imageUrl} 
-                  alt={member.name} 
-                  fill 
-                  sizes="(max-width: 768px) 100vw, 25vw"
-                  className={styles.memberImage} 
-                />
-                */}
+                {member.imageUrl ? (
+                  <Image 
+                    src={member.imageUrl} 
+                    alt={member.name} 
+                    fill 
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className={styles.memberImage} 
+                  />
+                ) : (
+                  <div 
+                    className={styles.memberImagePlaceholder}
+                    style={{ backgroundColor: member.color }}
+                  >
+                    {member.name.charAt(0)}
+                  </div>
+                )}
                 <div className={styles.memberOverlay}>
                   <h3 className={styles.memberName}>{member.name}</h3>
                   <p className={styles.memberRole}>{member.role}</p>

@@ -70,6 +70,7 @@
 
 .memberImage {
   object-fit: cover;
+  position: relative;
 }
 
 .memberOverlay {
