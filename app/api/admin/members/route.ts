@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs-extra';
-import path from 'path';
 import { isAuthenticatedFromRequest } from '@/utils/auth';
-
-const membersFilePath = path.join(process.cwd(), 'data', 'members.json');
-
-// Helper function to check authentication from request
-// const isAuthenticated = (request: NextRequest): boolean => {
-//   const authCookie = request.cookies.get('fosskok_admin_auth');
-//   return authCookie?.value === 'true';
-// };
+import { getCollection } from '@/utils/mongodb';
+import { ObjectId } from 'mongodb';
 
 // GET all members
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    if (!isAuthenticatedFromRequest(request)) {
+    // Check authentication for admin routes
+    if (request.url.includes('/api/admin/') && !isAuthenticatedFromRequest(request)) {
       return NextResponse.json(
         { success: false, message: 'Ikke autentisert' },
         { status: 401 }
       );
     }
     
-    const members = await fs.readJSON(membersFilePath);
+    const membersCollection = await getCollection('members');
+    const members = await membersCollection.find({}).sort({ name: 1 }).toArray();
+    
     return NextResponse.json(members);
   } catch (error) {
     console.error('Error fetching members:', error);
@@ -45,24 +39,20 @@ export async function POST(request: NextRequest) {
     }
     
     const newMember = await request.json();
-    const members = await fs.readJSON(membersFilePath);
+    const membersCollection = await getCollection('members');
     
-    // Generate a new ID
-    const maxId = members.reduce((max: number, member: any) => 
-      member.id > max ? member.id : max, 0);
-    newMember.id = maxId + 1;
+    // Insert the new member
+    const result = await membersCollection.insertOne(newMember);
     
-    // Add the new member
-    members.push(newMember);
-    
-    // Save to file
-    await fs.writeJSON(membersFilePath, members, { spaces: 2 });
-    
-    return NextResponse.json(newMember);
+    // Return the created member with its ID
+    return NextResponse.json({
+      ...newMember,
+      _id: result.insertedId
+    });
   } catch (error) {
     console.error('Error creating member:', error);
     return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
+      { success: false, message: 'Serverfeil: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -80,27 +70,23 @@ export async function PUT(request: NextRequest) {
     }
     
     const updatedMember = await request.json();
-    const members = await fs.readJSON(membersFilePath);
+    const membersCollection = await getCollection('members');
     
-    // Find and update the member
-    const index = members.findIndex((m: any) => m.id === updatedMember.id);
+    // Get the ID and remove it from the update object
+    const { _id, ...memberData } = updatedMember;
     
-    if (index === -1) {
+    // Update the member
+    const result = await membersCollection.updateOne(
+      { _id: new ObjectId(_id) },
+      { $set: memberData }
+    );
+    
+    if (result.matchedCount === 0) {
       return NextResponse.json(
         { success: false, message: 'Medlem ikke funnet' },
         { status: 404 }
       );
     }
-    
-    // Preserve the color if it exists and is not being updated
-    if (!updatedMember.color && members[index].color) {
-      updatedMember.color = members[index].color;
-    }
-    
-    members[index] = updatedMember;
-    
-    // Save to file
-    await fs.writeJSON(membersFilePath, members, { spaces: 2 });
     
     return NextResponse.json(updatedMember);
   } catch (error) {
@@ -123,32 +109,29 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    const url = new URL(request.url);
-    const id = parseInt(url.searchParams.get('id') || '0');
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Mangler ID' },
+        { success: false, message: 'ID er påkrevd' },
         { status: 400 }
       );
     }
     
-    const members = await fs.readJSON(membersFilePath);
+    const membersCollection = await getCollection('members');
     
-    // Filter out the member to delete
-    const filteredMembers = members.filter((m: any) => m.id !== id);
+    // Delete the member
+    const result = await membersCollection.deleteOne({ _id: new ObjectId(id) });
     
-    if (filteredMembers.length === members.length) {
+    if (result.deletedCount === 0) {
       return NextResponse.json(
         { success: false, message: 'Medlem ikke funnet' },
         { status: 404 }
       );
     }
     
-    // Save to file
-    await fs.writeJSON(membersFilePath, filteredMembers, { spaces: 2 });
-    
-    return NextResponse.json({ success: true, id });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting member:', error);
     return NextResponse.json(

@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs-extra';
-import path from 'path';
 import { isAuthenticatedFromRequest } from '@/utils/auth';
-
-const eventsFilePath = path.join(process.cwd(), 'data', 'events.json');
-
-// Helper function to check authentication from request
-// const isAuthenticated = (request: NextRequest): boolean => {
-//   const authCookie = request.cookies.get('fosskok_admin_auth');
-//   return authCookie?.value === 'true';
-// };
+import { getCollection } from '@/utils/mongodb';
+import { ObjectId } from 'mongodb';
 
 // GET all events
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    if (!isAuthenticatedFromRequest(request)) {
+    // Check authentication for admin routes
+    if (request.url.includes('/api/admin/') && !isAuthenticatedFromRequest(request)) {
       return NextResponse.json(
         { success: false, message: 'Ikke autentisert' },
         { status: 401 }
       );
     }
     
-    const events = await fs.readJSON(eventsFilePath);
+    const eventsCollection = await getCollection('events');
+    const events = await eventsCollection.find({}).sort({ date: -1 }).toArray();
+    
     return NextResponse.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -45,24 +39,20 @@ export async function POST(request: NextRequest) {
     }
     
     const newEvent = await request.json();
-    const events = await fs.readJSON(eventsFilePath);
+    const eventsCollection = await getCollection('events');
     
-    // Generate a new ID
-    const maxId = events.reduce((max: number, event: any) => 
-      event.id > max ? event.id : max, 0);
-    newEvent.id = maxId + 1;
+    // Insert the new event
+    const result = await eventsCollection.insertOne(newEvent);
     
-    // Add the new event
-    events.push(newEvent);
-    
-    // Save to file
-    await fs.writeJSON(eventsFilePath, events, { spaces: 2 });
-    
-    return NextResponse.json(newEvent);
+    // Return the created event with its ID
+    return NextResponse.json({
+      ...newEvent,
+      _id: result.insertedId
+    });
   } catch (error) {
     console.error('Error creating event:', error);
     return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
+      { success: false, message: 'Serverfeil: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -80,22 +70,23 @@ export async function PUT(request: NextRequest) {
     }
     
     const updatedEvent = await request.json();
-    const events = await fs.readJSON(eventsFilePath);
+    const eventsCollection = await getCollection('events');
     
-    // Find and update the event
-    const index = events.findIndex((e: any) => e.id === updatedEvent.id);
+    // Get the ID and remove it from the update object
+    const { _id, ...eventData } = updatedEvent;
     
-    if (index === -1) {
+    // Update the event
+    const result = await eventsCollection.updateOne(
+      { _id: new ObjectId(_id) },
+      { $set: eventData }
+    );
+    
+    if (result.matchedCount === 0) {
       return NextResponse.json(
         { success: false, message: 'Arrangement ikke funnet' },
         { status: 404 }
       );
     }
-    
-    events[index] = updatedEvent;
-    
-    // Save to file
-    await fs.writeJSON(eventsFilePath, events, { spaces: 2 });
     
     return NextResponse.json(updatedEvent);
   } catch (error) {
@@ -118,32 +109,29 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    const url = new URL(request.url);
-    const id = parseInt(url.searchParams.get('id') || '0');
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Mangler ID' },
+        { success: false, message: 'ID er påkrevd' },
         { status: 400 }
       );
     }
     
-    const events = await fs.readJSON(eventsFilePath);
+    const eventsCollection = await getCollection('events');
     
-    // Filter out the event to delete
-    const filteredEvents = events.filter((e: any) => e.id !== id);
+    // Delete the event
+    const result = await eventsCollection.deleteOne({ _id: new ObjectId(id) });
     
-    if (filteredEvents.length === events.length) {
+    if (result.deletedCount === 0) {
       return NextResponse.json(
         { success: false, message: 'Arrangement ikke funnet' },
         { status: 404 }
       );
     }
     
-    // Save to file
-    await fs.writeJSON(eventsFilePath, filteredEvents, { spaces: 2 });
-    
-    return NextResponse.json({ success: true, id });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting event:', error);
     return NextResponse.json(

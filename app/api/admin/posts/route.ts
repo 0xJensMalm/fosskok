@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs-extra';
-import path from 'path';
 import { isAuthenticatedFromRequest } from '@/utils/auth';
-
-const postsFilePath = path.join(process.cwd(), 'data', 'posts.json');
+import { getCollection } from '@/utils/mongodb';
+import { ObjectId } from 'mongodb';
 
 // Helper function to generate a slug from a title
 const generateSlug = (title: string) => {
@@ -18,15 +16,17 @@ const generateSlug = (title: string) => {
 // GET all posts
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    if (!isAuthenticatedFromRequest(request)) {
+    // Check authentication for admin routes
+    if (request.url.includes('/api/admin/') && !isAuthenticatedFromRequest(request)) {
       return NextResponse.json(
         { success: false, message: 'Ikke autentisert' },
         { status: 401 }
       );
     }
     
-    const posts = await fs.readJSON(postsFilePath);
+    const postsCollection = await getCollection('posts');
+    const posts = await postsCollection.find({}).sort({ date: -1 }).toArray();
+    
     return NextResponse.json(posts);
   } catch (error) {
     console.error('Error fetching posts:', error);
@@ -49,12 +49,7 @@ export async function POST(request: NextRequest) {
     }
     
     const newPost = await request.json();
-    const posts = await fs.readJSON(postsFilePath);
-    
-    // Generate a new ID
-    const maxId = posts.reduce((max: number, post: any) => 
-      post.id > max ? post.id : max, 0);
-    newPost.id = maxId + 1;
+    const postsCollection = await getCollection('posts');
     
     // Generate a slug if not provided
     if (!newPost.slug) {
@@ -75,17 +70,18 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Add the new post
-    posts.push(newPost);
+    // Insert the new post
+    const result = await postsCollection.insertOne(newPost);
     
-    // Save to file
-    await fs.writeJSON(postsFilePath, posts, { spaces: 2 });
-    
-    return NextResponse.json(newPost);
+    // Return the created post with its ID
+    return NextResponse.json({
+      ...newPost,
+      _id: result.insertedId
+    });
   } catch (error) {
     console.error('Error creating post:', error);
     return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
+      { success: false, message: 'Serverfeil: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     );
   }
@@ -103,35 +99,36 @@ export async function PUT(request: NextRequest) {
     }
     
     const updatedPost = await request.json();
-    const posts = await fs.readJSON(postsFilePath);
+    const postsCollection = await getCollection('posts');
     
-    // Find and update the post
-    const index = posts.findIndex((p: any) => p.id === updatedPost.id);
-    
-    if (index === -1) {
-      return NextResponse.json(
-        { success: false, message: 'Innlegg ikke funnet' },
-        { status: 404 }
-      );
-    }
+    // Get the ID and remove it from the update object
+    const { _id, ...postData } = updatedPost;
     
     // Update the slug if title changed
-    if (updatedPost.title !== posts[index].title && !updatedPost.slug) {
+    if (updatedPost.title !== postData.title && !updatedPost.slug) {
       updatedPost.slug = generateSlug(updatedPost.title);
     }
     
     // Update excerpt if content changed
-    if (updatedPost.content !== posts[index].content && !updatedPost.excerpt) {
+    if (updatedPost.content !== postData.content && !updatedPost.excerpt) {
       updatedPost.excerpt = updatedPost.content.substring(0, 150).trim();
       if (updatedPost.content.length > 150) {
         updatedPost.excerpt += '...';
       }
     }
     
-    posts[index] = updatedPost;
+    // Update the post
+    const result = await postsCollection.updateOne(
+      { _id: new ObjectId(_id) },
+      { $set: updatedPost }
+    );
     
-    // Save to file
-    await fs.writeJSON(postsFilePath, posts, { spaces: 2 });
+    if (result.matchedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: 'Innlegg ikke funnet' },
+        { status: 404 }
+      );
+    }
     
     return NextResponse.json(updatedPost);
   } catch (error) {
@@ -154,32 +151,29 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    const url = new URL(request.url);
-    const id = parseInt(url.searchParams.get('id') || '0');
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     
     if (!id) {
       return NextResponse.json(
-        { success: false, message: 'Mangler ID' },
+        { success: false, message: 'ID er påkrevd' },
         { status: 400 }
       );
     }
     
-    const posts = await fs.readJSON(postsFilePath);
+    const postsCollection = await getCollection('posts');
     
-    // Filter out the post to delete
-    const filteredPosts = posts.filter((p: any) => p.id !== id);
+    // Delete the post
+    const result = await postsCollection.deleteOne({ _id: new ObjectId(id) });
     
-    if (filteredPosts.length === posts.length) {
+    if (result.deletedCount === 0) {
       return NextResponse.json(
         { success: false, message: 'Innlegg ikke funnet' },
         { status: 404 }
       );
     }
     
-    // Save to file
-    await fs.writeJSON(postsFilePath, filteredPosts, { spaces: 2 });
-    
-    return NextResponse.json({ success: true, id });
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting post:', error);
     return NextResponse.json(

@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs-extra';
-import path from 'path';
-
-const eventsFilePath = path.join(process.cwd(), 'data', 'events.json');
+import { getCollection } from '@/utils/mongodb';
 
 // GET all events - public endpoint, no authentication required
 export async function GET(request: NextRequest) {
   try {
-    const events = await fs.readJSON(eventsFilePath);
+    const eventsCollection = await getCollection('events');
+    const events = await eventsCollection.find({}).sort({ date: -1 }).toArray();
     return NextResponse.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
