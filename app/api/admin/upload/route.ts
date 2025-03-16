@@ -4,6 +4,14 @@ import { writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
+// Set body size limit for file uploads
+export const config = {
+  api: {
+    bodyParser: false,
+    responseLimit: '10mb',
+  },
+};
+
 // Handle image uploads
 export async function POST(request: NextRequest) {
   try {
@@ -34,9 +42,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check file size (limit to 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { success: false, message: 'Filen er for stor (maks 5MB)' },
+        { status: 400 }
+      );
+    }
+
     // Create unique filename
     const buffer = await file.arrayBuffer();
-    const filename = Date.now() + '-' + file.name.replace(/\s/g, '_');
+    const filename = Date.now() + '-' + file.name.replace(/\s/g, '_').toLowerCase();
     
     // Ensure the uploads directory exists
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
