@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authConfig } from '@/src/config';
 
 // Check if user is authenticated using request cookies
 export function isAuthenticatedFromRequest(request: NextRequest): boolean {
-  const authCookie = request.cookies.get('fosskok_admin_auth');
+  const authCookie = request.cookies.get(authConfig.cookieName);
   return authCookie?.value === 'true';
 }
 
 // Check if user is authenticated in a server component
 export function isAuthenticatedInServerComponent(request: NextRequest): boolean {
-  const authCookie = request.cookies.get('fosskok_admin_auth');
+  const authCookie = request.cookies.get(authConfig.cookieName);
   return authCookie?.value === 'true';
 }
 
@@ -29,11 +30,11 @@ export function authMiddleware(handler: (req: NextRequest) => Promise<NextRespon
 // Set authentication cookie
 export function setAuthCookie(response: NextResponse): NextResponse {
   response.cookies.set({
-    name: 'fosskok_admin_auth',
+    name: authConfig.cookieName,
     value: 'true',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24, // 1 day
+    maxAge: authConfig.cookieMaxAge,
     path: '/',
   });
   
@@ -43,7 +44,7 @@ export function setAuthCookie(response: NextResponse): NextResponse {
 // Clear authentication cookie
 export function clearAuthCookie(response: NextResponse): NextResponse {
   response.cookies.set({
-    name: 'fosskok_admin_auth',
+    name: authConfig.cookieName,
     value: '',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

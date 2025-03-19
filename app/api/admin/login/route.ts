@@ -1,36 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs-extra';
-import path from 'path';
 import bcrypt from 'bcryptjs';
 import { setAuthCookie } from '@/utils/auth';
-
-const usersFilePath = path.join(process.cwd(), 'data', 'users.json');
+import { getCollection } from '@/utils/data';
+import { successResponse, errorResponse, handleApiError } from '@/src/utils/api';
+import { User } from '@/src/types/models';
+import { dataFilePaths } from '@/src/config';
 
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
     
-    // Read users from file
-    const users = await fs.readJSON(usersFilePath);
+    // Get users collection
+    const usersCollection = await getCollection('users');
     
     // Find user
-    const user = users.find((u: any) => u.username === username);
+    const user = await usersCollection.findOne<User>({ username });
     
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Ugyldig brukernavn eller passord' },
-        { status: 401 }
-      );
+      return errorResponse('Ugyldig brukernavn eller passord', 401);
     }
     
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
-      return NextResponse.json(
-        { success: false, message: 'Ugyldig brukernavn eller passord' },
-        { status: 401 }
-      );
+      return errorResponse('Ugyldig brukernavn eller passord', 401);
     }
     
     // Create response with success message
@@ -39,10 +33,6 @@ export async function POST(request: NextRequest) {
     // Set auth cookie using our utility function
     return setAuthCookie(response);
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

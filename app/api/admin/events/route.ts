@@ -1,28 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAuthenticatedFromRequest } from '@/utils/auth';
+import { isAuthenticatedFromRequest, authMiddleware } from '@/utils/auth';
 import { getCollection } from '@/utils/data';
+import { successResponse, errorResponse, handleApiError } from '@/src/utils/api';
+import { Event } from '@/src/types/models';
 
 // GET all events
 export async function GET(request: NextRequest) {
   try {
     // Check authentication for admin routes
     if (request.url.includes('/api/admin/') && !isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
     const eventsCollection = await getCollection('events');
-    const events = await eventsCollection.find().sort().toArray();
+    const events = await eventsCollection.find().sort().toArray<Event>();
     
-    return NextResponse.json(events);
+    return successResponse(events);
   } catch (error) {
-    console.error('Error fetching events:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -31,29 +26,26 @@ export async function POST(request: NextRequest) {
   try {
     // Check authentication
     if (!isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
     const newEvent = await request.json();
     const eventsCollection = await getCollection('events');
     
     // Insert the new event
-    const result = await eventsCollection.insertOne(newEvent);
+    const result = await eventsCollection.insertOne<Event>(newEvent);
+    
+    if (!result.success) {
+      return errorResponse('Kunne ikke opprette arrangement', 500);
+    }
     
     // Return the created event with its ID
-    return NextResponse.json({
+    return successResponse({
       ...newEvent,
       id: result.insertedId
     });
   } catch (error) {
-    console.error('Error creating event:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil: ' + (error instanceof Error ? error.message : String(error)) },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -62,10 +54,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Check authentication
     if (!isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
     const updatedEvent = await request.json();
@@ -75,25 +64,18 @@ export async function PUT(request: NextRequest) {
     const { id, ...eventData } = updatedEvent;
     
     // Update the event
-    const result = await eventsCollection.updateOne(
+    const result = await eventsCollection.updateOne<Event>(
       { id: id },
-      { $set: eventData }
+      eventData
     );
     
-    if (result.matchedCount === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Arrangement ikke funnet' },
-        { status: 404 }
-      );
+    if (!result.success || result.modifiedCount === 0) {
+      return errorResponse('Arrangement ikke funnet', 404);
     }
     
-    return NextResponse.json(updatedEvent);
+    return successResponse(updatedEvent);
   } catch (error) {
-    console.error('Error updating event:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -102,40 +84,28 @@ export async function DELETE(request: NextRequest) {
   try {
     // Check authentication
     if (!isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    // Get the ID from the URL
+    const url = new URL(request.url);
+    const id = parseInt(url.searchParams.get('id') || '0');
     
     if (!id) {
-      return NextResponse.json(
-        { success: false, message: 'ID er påkrevd' },
-        { status: 400 }
-      );
+      return errorResponse('Mangler ID', 400);
     }
     
     const eventsCollection = await getCollection('events');
     
     // Delete the event
-    const result = await eventsCollection.deleteOne({ id: parseInt(id) });
+    const result = await eventsCollection.deleteOne<Event>({ id });
     
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Arrangement ikke funnet' },
-        { status: 404 }
-      );
+    if (!result.success || result.deletedCount === 0) {
+      return errorResponse('Arrangement ikke funnet', 404);
     }
     
-    return NextResponse.json({ success: true });
+    return successResponse(null, 'Arrangement slettet');
   } catch (error) {
-    console.error('Error deleting event:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }

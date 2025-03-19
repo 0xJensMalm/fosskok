@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAuthenticatedFromRequest } from '@/utils/auth';
+import { isAuthenticatedFromRequest, authMiddleware } from '@/utils/auth';
 import { getCollection } from '@/utils/data';
+import { successResponse, errorResponse, handleApiError } from '@/src/utils/api';
+import { Post } from '@/src/types/models';
 
 // Helper function to generate a slug from a title
 const generateSlug = (title: string) => {
@@ -17,22 +19,15 @@ export async function GET(request: NextRequest) {
   try {
     // Check authentication for admin routes
     if (request.url.includes('/api/admin/') && !isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
     const postsCollection = await getCollection('posts');
-    const posts = await postsCollection.find().sort().toArray();
+    const posts = await postsCollection.find().sort().toArray<Post>();
     
-    return NextResponse.json(posts);
+    return successResponse(posts);
   } catch (error) {
-    console.error('Error fetching posts:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -41,10 +36,7 @@ export async function POST(request: NextRequest) {
   try {
     // Check authentication
     if (!isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
     const newPost = await request.json();
@@ -70,19 +62,19 @@ export async function POST(request: NextRequest) {
     }
     
     // Insert the new post
-    const result = await postsCollection.insertOne(newPost);
+    const result = await postsCollection.insertOne<Post>(newPost);
+    
+    if (!result.success) {
+      return errorResponse('Kunne ikke opprette innlegg', 500);
+    }
     
     // Return the created post with its ID
-    return NextResponse.json({
+    return successResponse({
       ...newPost,
       id: result.insertedId
     });
   } catch (error) {
-    console.error('Error creating post:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil: ' + (error instanceof Error ? error.message : String(error)) },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -91,10 +83,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Check authentication
     if (!isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
     const updatedPost = await request.json();
@@ -117,25 +106,18 @@ export async function PUT(request: NextRequest) {
     }
     
     // Update the post
-    const result = await postsCollection.updateOne(
+    const result = await postsCollection.updateOne<Post>(
       { id: id },
-      { $set: updatedPost }
+      updatedPost
     );
     
-    if (result.matchedCount === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Innlegg ikke funnet' },
-        { status: 404 }
-      );
+    if (!result.success || result.modifiedCount === 0) {
+      return errorResponse('Innlegg ikke funnet', 404);
     }
     
-    return NextResponse.json(updatedPost);
+    return successResponse(updatedPost);
   } catch (error) {
-    console.error('Error updating post:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
 
@@ -144,40 +126,28 @@ export async function DELETE(request: NextRequest) {
   try {
     // Check authentication
     if (!isAuthenticatedFromRequest(request)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
     
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    // Get the ID from the URL
+    const url = new URL(request.url);
+    const id = parseInt(url.searchParams.get('id') || '0');
     
     if (!id) {
-      return NextResponse.json(
-        { success: false, message: 'ID er påkrevd' },
-        { status: 400 }
-      );
+      return errorResponse('Mangler ID', 400);
     }
     
     const postsCollection = await getCollection('posts');
     
     // Delete the post
-    const result = await postsCollection.deleteOne({ id: parseInt(id) });
+    const result = await postsCollection.deleteOne<Post>({ id });
     
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Innlegg ikke funnet' },
-        { status: 404 }
-      );
+    if (!result.success || result.deletedCount === 0) {
+      return errorResponse('Innlegg ikke funnet', 404);
     }
     
-    return NextResponse.json({ success: true });
+    return successResponse(null, 'Innlegg slettet');
   } catch (error) {
-    console.error('Error deleting post:', error);
-    return NextResponse.json(
-      { success: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error);
   }
 }
