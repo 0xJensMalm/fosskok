@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticatedFromRequest } from '@/utils/auth';
-import { getCollection } from '@/utils/mongodb';
-import { ObjectId } from 'mongodb';
+import { getCollection } from '@/utils/data';
 
 // Helper function to generate a slug from a title
 const generateSlug = (title: string) => {
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
     
     const postsCollection = await getCollection('posts');
-    const posts = await postsCollection.find({}).sort({ date: -1 }).toArray();
+    const posts = await postsCollection.find().sort().toArray();
     
     return NextResponse.json(posts);
   } catch (error) {
@@ -76,7 +75,7 @@ export async function POST(request: NextRequest) {
     // Return the created post with its ID
     return NextResponse.json({
       ...newPost,
-      _id: result.insertedId
+      id: result.insertedId
     });
   } catch (error) {
     console.error('Error creating post:', error);
@@ -102,7 +101,7 @@ export async function PUT(request: NextRequest) {
     const postsCollection = await getCollection('posts');
     
     // Get the ID and remove it from the update object
-    const { _id, ...postData } = updatedPost;
+    const { id, ...postData } = updatedPost;
     
     // Update the slug if title changed
     if (updatedPost.title !== postData.title && !updatedPost.slug) {
@@ -119,7 +118,7 @@ export async function PUT(request: NextRequest) {
     
     // Update the post
     const result = await postsCollection.updateOne(
-      { _id: new ObjectId(_id) },
+      { id: id },
       { $set: updatedPost }
     );
     
@@ -164,7 +163,7 @@ export async function DELETE(request: NextRequest) {
     const postsCollection = await getCollection('posts');
     
     // Delete the post
-    const result = await postsCollection.deleteOne({ _id: new ObjectId(id) });
+    const result = await postsCollection.deleteOne({ id: parseInt(id) });
     
     if (result.deletedCount === 0) {
       return NextResponse.json(

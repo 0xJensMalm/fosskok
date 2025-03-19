@@ -2,12 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Create .env.local file with MongoDB connection info
-const envContent = `MONGODB_URI=mongodb+srv://jensmalm:<db_password>@fosskok.swvxv.mongodb.net/?retryWrites=true&w=majority&appName=Fosskok
-MONGODB_DB=fosskok
+// Create .env.local file with basic configuration
+const envContent = `# Environment variables for Fosskok Next.js application
+NODE_ENV=development
 
-# Replace <db_password> with your actual MongoDB password
-# Then run your application with: npm run dev
+# Add any other environment variables here as needed
 `;
 
 const envPath = path.join(__dirname, '.env.local');
@@ -16,5 +15,4 @@ const envPath = path.join(__dirname, '.env.local');
 fs.writeFileSync(envPath, envContent);
 
 console.log('\x1b[32m%s\x1b[0m', '✅ Created .env.local file');
-console.log('\x1b[33m%s\x1b[0m', '⚠️  Important: Edit .env.local to replace <db_password> with your actual MongoDB password');
-console.log('\x1b[36m%s\x1b[0m', '📝 Then run your application with: npm run dev');
+console.log('\x1b[36m%s\x1b[0m', '📝 Run your application with: npm run dev');

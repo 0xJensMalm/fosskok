@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticatedFromRequest } from '@/utils/auth';
-import { getCollection } from '@/utils/mongodb';
-import { ObjectId } from 'mongodb';
+import { getCollection } from '@/utils/data';
 
 // GET all members
 export async function GET(request: NextRequest) {
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
     
     const membersCollection = await getCollection('members');
-    const members = await membersCollection.find({}).sort({ name: 1 }).toArray();
+    const members = await membersCollection.find().sort().toArray();
     
     return NextResponse.json(members);
   } catch (error) {
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Return the created member with its ID
     return NextResponse.json({
       ...newMember,
-      _id: result.insertedId
+      id: result.insertedId
     });
   } catch (error) {
     console.error('Error creating member:', error);
@@ -73,11 +72,11 @@ export async function PUT(request: NextRequest) {
     const membersCollection = await getCollection('members');
     
     // Get the ID and remove it from the update object
-    const { _id, ...memberData } = updatedMember;
+    const { id, ...memberData } = updatedMember;
     
     // Update the member
     const result = await membersCollection.updateOne(
-      { _id: new ObjectId(_id) },
+      { id: id },
       { $set: memberData }
     );
     
@@ -122,7 +121,7 @@ export async function DELETE(request: NextRequest) {
     const membersCollection = await getCollection('members');
     
     // Delete the member
-    const result = await membersCollection.deleteOne({ _id: new ObjectId(id) });
+    const result = await membersCollection.deleteOne({ id: parseInt(id) });
     
     if (result.deletedCount === 0) {
       return NextResponse.json(

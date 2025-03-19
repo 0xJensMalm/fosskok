@@ -7,5 +7,11 @@
   "regions": ["fra1"],
   "github": {
     "silent": true
+  },
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
   }
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticatedFromRequest } from '@/utils/auth';
-import { getCollection } from '@/utils/mongodb';
-import { ObjectId } from 'mongodb';
+import { getCollection } from '@/utils/data';
 
 // GET all events
 export async function GET(request: NextRequest) {
@@ -15,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
     
     const eventsCollection = await getCollection('events');
-    const events = await eventsCollection.find({}).sort({ date: -1 }).toArray();
+    const events = await eventsCollection.find().sort().toArray();
     
     return NextResponse.json(events);
   } catch (error) {
@@ -47,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Return the created event with its ID
     return NextResponse.json({
       ...newEvent,
-      _id: result.insertedId
+      id: result.insertedId
     });
   } catch (error) {
     console.error('Error creating event:', error);
@@ -73,11 +72,11 @@ export async function PUT(request: NextRequest) {
     const eventsCollection = await getCollection('events');
     
     // Get the ID and remove it from the update object
-    const { _id, ...eventData } = updatedEvent;
+    const { id, ...eventData } = updatedEvent;
     
     // Update the event
     const result = await eventsCollection.updateOne(
-      { _id: new ObjectId(_id) },
+      { id: id },
       { $set: eventData }
     );
     
@@ -122,7 +121,7 @@ export async function DELETE(request: NextRequest) {
     const eventsCollection = await getCollection('events');
     
     // Delete the event
-    const result = await eventsCollection.deleteOne({ _id: new ObjectId(id) });
+    const result = await eventsCollection.deleteOne({ id: parseInt(id) });
     
     if (result.deletedCount === 0) {
       return NextResponse.json(
