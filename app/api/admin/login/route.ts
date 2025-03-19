@@ -7,6 +7,16 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
     
+    // Debug log to see what values are being compared
+    console.log('Login attempt:', {
+      providedUsername: username,
+      configUsername: authConfig.adminUsername,
+      providedPassword: password,
+      configPassword: authConfig.adminPassword,
+      envUsername: process.env.ADMIN_USERNAME,
+      envPassword: process.env.ADMIN_PASSWORD
+    });
+    
     // Simple authentication check against config values
     if (username !== authConfig.adminUsername || password !== authConfig.adminPassword) {
       return errorResponse('Ugyldig brukernavn eller passord', 401);
