@@ -36,6 +36,9 @@ export const dataFilePaths = {
 export const authConfig = {
   cookieName: 'fosskok_admin_auth',
   cookieMaxAge: 60 * 60 * 24, // 1 day in seconds
+  // Default admin credentials - should be overridden by environment variables in production
+  adminUsername: process.env.ADMIN_USERNAME || 'admin',
+  adminPassword: process.env.ADMIN_PASSWORD || 'fosskok2025',
 };
 
 // Date formatting options

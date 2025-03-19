@@ -19,13 +19,15 @@ export function successResponse<T>(data?: T, message?: string): NextResponse<Api
  * Create an error API response
  * @param message Error message
  * @param status HTTP status code (default: 400)
+ * @param data Optional additional data to include in the response
  * @returns NextResponse with JSON error
  */
-export function errorResponse(message: string, status: number = 400): NextResponse<ApiResponse> {
+export function errorResponse<T>(message: string, status: number = 400, data?: T): NextResponse<ApiResponse> {
   return NextResponse.json(
     {
       success: false,
       message,
+      data,
     },
     { status }
   );
@@ -34,14 +36,15 @@ export function errorResponse(message: string, status: number = 400): NextRespon
 /**
  * Handle API errors and return appropriate response
  * @param error Error object
+ * @param data Optional additional data to include in the response
  * @returns NextResponse with JSON error
  */
-export function handleApiError(error: unknown): NextResponse<ApiResponse> {
+export function handleApiError<T>(error: unknown, data?: T): NextResponse<ApiResponse> {
   console.error('API Error:', error);
   
   if (error instanceof Error) {
-    return errorResponse(error.message, 500);
+    return errorResponse(error.message, 500, data);
   }
   
-  return errorResponse('An unexpected error occurred', 500);
+  return errorResponse('An unexpected error occurred', 500, data);
 }

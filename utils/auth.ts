@@ -29,11 +29,14 @@ export function authMiddleware(handler: (req: NextRequest) => Promise<NextRespon
 
 // Set authentication cookie
 export function setAuthCookie(response: NextResponse): NextResponse {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   response.cookies.set({
     name: authConfig.cookieName,
     value: 'true',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: authConfig.cookieMaxAge,
     path: '/',
   });
@@ -43,11 +46,14 @@ export function setAuthCookie(response: NextResponse): NextResponse {
 
 // Clear authentication cookie
 export function clearAuthCookie(response: NextResponse): NextResponse {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   response.cookies.set({
     name: authConfig.cookieName,
     value: '',
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 0,
     path: '/',
   });

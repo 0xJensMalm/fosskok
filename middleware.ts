@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticatedFromRequest } from './utils/auth';
+import { errorResponse } from './src/utils/api';
+import { authConfig } from './src/config';
 
 export function middleware(request: NextRequest) {
   // Get the pathname of the request
@@ -7,8 +9,8 @@ export function middleware(request: NextRequest) {
 
   // Check if the path is for admin dashboard or admin API
   if (pathname.startsWith('/admin/dashboard') || pathname.startsWith('/api/admin')) {
-    // Exclude the login API from authentication check
-    if (pathname === '/api/admin/login') {
+    // Exclude the login API and check-auth API from authentication check
+    if (pathname === '/api/admin/login' || pathname === '/api/admin/check-auth') {
       return NextResponse.next();
     }
 
@@ -20,10 +22,7 @@ export function middleware(request: NextRequest) {
       }
       
       // If trying to access API, return 401 unauthorized
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
+      return errorResponse('Ikke autentisert', 401);
     }
   }
 

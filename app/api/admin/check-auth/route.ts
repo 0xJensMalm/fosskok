@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { isAuthenticatedFromRequest } from '@/utils/auth';
+import { successResponse, errorResponse, handleApiError } from '@/src/utils/api';
+import { authConfig } from '@/src/config';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check if the authentication cookie exists in the request directly
-    // This is more reliable for API routes in Next.js App Router
-    const authCookie = request.cookies.get('fosskok_admin_auth');
-    
-    if (authCookie && authCookie.value === 'true') {
-      return NextResponse.json({ authenticated: true });
+    if (isAuthenticatedFromRequest(request)) {
+      return successResponse({ authenticated: true });
     }
     
-    return NextResponse.json(
-      { authenticated: false, message: 'Ikke autentisert' },
-      { status: 401 }
-    );
+    return errorResponse('Ikke autentisert', 401, { authenticated: false });
   } catch (error) {
-    console.error('Auth check error:', error);
-    return NextResponse.json(
-      { authenticated: false, message: 'Serverfeil' },
-      { status: 500 }
-    );
+    return handleApiError(error, { authenticated: false });
   }
 }
