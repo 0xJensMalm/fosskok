@@ -5,8 +5,10 @@ const nextConfig = {
     domains: [],
     remotePatterns: [],
   },
-  // Enable static exports for better performance
+  // Use standalone output for Vercel deployment
   output: 'standalone',
+  // Ensure trailing slashes for better compatibility
+  trailingSlash: true,
 };
 
 module.exports = nextConfig;
