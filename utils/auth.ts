@@ -4,6 +4,11 @@ import { authConfig } from '@/src/config';
 // Check if user is authenticated using request cookies
 export function isAuthenticatedFromRequest(request: NextRequest): boolean {
   const authCookie = request.cookies.get(authConfig.cookieName);
+  console.log('Auth cookie check:', { 
+    cookieName: authConfig.cookieName, 
+    cookieValue: authCookie?.value,
+    isAuthenticated: authCookie?.value === 'true'
+  });
   return authCookie?.value === 'true';
 }
 
@@ -31,12 +36,19 @@ export function authMiddleware(handler: (req: NextRequest) => Promise<NextRespon
 export function setAuthCookie(response: NextResponse): NextResponse {
   const isProduction = process.env.NODE_ENV === 'production';
   
+  console.log('Setting auth cookie', {
+    cookieName: authConfig.cookieName,
+    cookieValue: 'true',
+    maxAge: authConfig.cookieMaxAge,
+    isProduction
+  });
+  
   response.cookies.set({
     name: authConfig.cookieName,
     value: 'true',
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'lax', 
     maxAge: authConfig.cookieMaxAge,
     path: '/',
   });
@@ -48,12 +60,16 @@ export function setAuthCookie(response: NextResponse): NextResponse {
 export function clearAuthCookie(response: NextResponse): NextResponse {
   const isProduction = process.env.NODE_ENV === 'production';
   
+  console.log('Clearing auth cookie', {
+    cookieName: authConfig.cookieName
+  });
+  
   response.cookies.set({
     name: authConfig.cookieName,
     value: '',
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
+    sameSite: 'lax', 
     maxAge: 0,
     path: '/',
   });

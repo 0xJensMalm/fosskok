@@ -9,17 +9,17 @@ export const siteConfig = {
 
 // API paths
 export const apiPaths = {
-  events: '/api/events',
-  members: '/api/members',
-  posts: '/api/posts',
+  events: '/api/events/',
+  members: '/api/members/',
+  posts: '/api/posts/',
   admin: {
-    login: '/api/admin/login',
-    logout: '/api/admin/logout',
-    checkAuth: '/api/admin/check-auth',
-    events: '/api/admin/events',
-    members: '/api/admin/members',
-    posts: '/api/admin/posts',
-    upload: '/api/admin/upload',
+    login: '/api/admin/login/',
+    logout: '/api/admin/logout/',
+    checkAuth: '/api/admin/check-auth/',
+    events: '/api/admin/events/',
+    members: '/api/admin/members/',
+    posts: '/api/admin/posts/',
+    upload: '/api/admin/upload/',
   },
 };
 
