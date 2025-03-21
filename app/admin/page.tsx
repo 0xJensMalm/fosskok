@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from './admin.module.css';
+import styles from './login.module.css';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -13,11 +13,11 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/admin/login/', {
+      const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,16 +25,17 @@ export default function AdminLogin() {
         body: JSON.stringify({ username, password }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        // Login successful, redirect to admin dashboard
-        router.push('/admin/dashboard/');
+        // Redirect to dashboard on successful login
+        router.push('/admin/dashboard');
       } else {
-        const data = await response.json();
-        setError(data.message || 'Innlogging mislyktes. Prøv igjen.');
+        setError(data.message || 'Innlogging mislyktes');
       }
     } catch (err) {
-      setError('En feil oppstod. Vennligst prøv igjen senere.');
       console.error('Login error:', err);
+      setError('En feil oppstod under innlogging. Vennligst prøv igjen.');
     } finally {
       setLoading(false);
     }
@@ -45,30 +46,30 @@ export default function AdminLogin() {
       <div className={styles.loginBox}>
         <h1 className={styles.title}>Fosskok Admin</h1>
         
-        {error && <div className={styles.error}>{error}</div>}
-        
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="username">Brukernavn</label>
+          {error && <div className={styles.error}>{error}</div>}
+          
+          <div className={styles.inputGroup}>
+            <label htmlFor="username" className={styles.label}>Brukernavn</label>
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
               className={styles.input}
+              required
             />
           </div>
           
-          <div className={styles.formGroup}>
-            <label htmlFor="password">Passord</label>
+          <div className={styles.inputGroup}>
+            <label htmlFor="password" className={styles.label}>Passord</label>
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               className={styles.input}
+              required
             />
           </div>
           

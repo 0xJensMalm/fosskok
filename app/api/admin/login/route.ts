@@ -1,32 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { setAuthCookie } from '@/utils/auth';
-import { successResponse, errorResponse, handleApiError } from '@/src/utils/api';
-import { authConfig } from '@/src/config';
+import { validateCredentials, setAuthCookie } from '@/utils/auth';
 
 export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
     
-    console.log('Login attempt received:', { username });
+    console.log('Login attempt received for username:', username);
     
-    // Direct credential check without MongoDB
-    // Using environment variables directly
-    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
-    const adminPassword = process.env.ADMIN_PASSWORD || 'fosskok2025';
-    
-    console.log('Comparing with:', { 
-      adminUsername, 
-      configUsername: authConfig.adminUsername,
-      match: username === adminUsername && password === adminPassword
-    });
-    
-    // Simple authentication check against direct env values
-    if (username !== adminUsername || password !== adminPassword) {
+    // Validate credentials using our utility function
+    if (!validateCredentials(username, password)) {
       console.log('Authentication failed');
       return NextResponse.json({ 
         success: false, 
-        message: 'Ugyldig brukernavn eller passord',
-        debug: true
+        message: 'Ugyldig brukernavn eller passord'
       }, { status: 401 });
     }
     
@@ -42,6 +28,9 @@ export async function POST(request: NextRequest) {
     return setAuthCookie(response);
   } catch (error) {
     console.error('Login error:', error);
-    return handleApiError(error);
+    return NextResponse.json({ 
+      success: false, 
+      message: 'En feil oppstod under innlogging'
+    }, { status: 500 });
   }
 }

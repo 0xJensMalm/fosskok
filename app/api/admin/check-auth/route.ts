@@ -1,16 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAuthenticatedFromRequest } from '@/utils/auth';
-import { successResponse, errorResponse, handleApiError } from '@/src/utils/api';
-import { authConfig } from '@/src/config';
 
 export async function GET(request: NextRequest) {
   try {
-    if (isAuthenticatedFromRequest(request)) {
-      return successResponse({ authenticated: true });
+    // Check for auth cookie
+    const authCookie = request.cookies.get('fosskok_auth');
+    const isAuthenticated = authCookie?.value === 'true';
+    
+    console.log('Auth check:', { isAuthenticated });
+    
+    if (isAuthenticated) {
+      return NextResponse.json({ 
+        success: true, 
+        authenticated: true 
+      });
     }
     
-    return errorResponse('Ikke autentisert', 401, { authenticated: false });
+    return NextResponse.json({ 
+      success: false, 
+      authenticated: false,
+      message: 'Ikke autentisert' 
+    }, { status: 401 });
   } catch (error) {
-    return handleApiError(error, { authenticated: false });
+    console.error('Auth check error:', error);
+    return NextResponse.json({ 
+      success: false, 
+      authenticated: false,
+      message: 'En feil oppstod under autentisering' 
+    }, { status: 500 });
   }
 }

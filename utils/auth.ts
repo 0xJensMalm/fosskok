@@ -1,55 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { authConfig } from '@/src/config';
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-// Check if user is authenticated using request cookies
-export function isAuthenticatedFromRequest(request: NextRequest): boolean {
-  const authCookie = request.cookies.get(authConfig.cookieName);
-  console.log('Auth cookie check:', { 
-    cookieName: authConfig.cookieName, 
-    cookieValue: authCookie?.value,
-    isAuthenticated: authCookie?.value === 'true'
-  });
-  return authCookie?.value === 'true';
-}
+// Cookie name for authentication
+const AUTH_COOKIE = 'fosskok_auth';
 
-// Check if user is authenticated in a server component
-export function isAuthenticatedInServerComponent(request: NextRequest): boolean {
-  const authCookie = request.cookies.get(authConfig.cookieName);
-  return authCookie?.value === 'true';
-}
+// Hard-coded credentials (in a real app, these would be stored securely)
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'fosskok2023';
 
-// Middleware to check authentication
-export function authMiddleware(handler: (req: NextRequest) => Promise<NextResponse>) {
-  return async (req: NextRequest) => {
-    if (!isAuthenticatedFromRequest(req)) {
-      return NextResponse.json(
-        { success: false, message: 'Ikke autentisert' },
-        { status: 401 }
-      );
-    }
-    
-    return handler(req);
-  };
+// Validate login credentials
+export function validateCredentials(username: string, password: string): boolean {
+  return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
 }
 
 // Set authentication cookie
 export function setAuthCookie(response: NextResponse): NextResponse {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  console.log('Setting auth cookie', {
-    cookieName: authConfig.cookieName,
-    cookieValue: 'true',
-    maxAge: authConfig.cookieMaxAge,
-    isProduction
-  });
-  
+  // Set cookie for 24 hours (in seconds)
   response.cookies.set({
-    name: authConfig.cookieName,
+    name: AUTH_COOKIE,
     value: 'true',
     httpOnly: true,
-    secure: isProduction,
-    sameSite: 'lax', 
-    maxAge: authConfig.cookieMaxAge,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
     path: '/',
   });
   
@@ -58,18 +31,12 @@ export function setAuthCookie(response: NextResponse): NextResponse {
 
 // Clear authentication cookie
 export function clearAuthCookie(response: NextResponse): NextResponse {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  console.log('Clearing auth cookie', {
-    cookieName: authConfig.cookieName
-  });
-  
   response.cookies.set({
-    name: authConfig.cookieName,
+    name: AUTH_COOKIE,
     value: '',
     httpOnly: true,
-    secure: isProduction,
-    sameSite: 'lax', 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
     maxAge: 0,
     path: '/',
   });
