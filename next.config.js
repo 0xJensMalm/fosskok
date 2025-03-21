@@ -13,8 +13,8 @@ const nextConfig = {
   },
   // Use standalone output for Vercel deployment
   output: 'standalone',
-  // Ensure trailing slashes for better compatibility
-  trailingSlash: true,
+  // Disable trailing slashes for testing
+  trailingSlash: false,
   // Enable strict mode for better error catching
   typescript: {
     ignoreBuildErrors: false,
@@ -23,7 +23,7 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
   // Configure headers for security
-  headers: async () => {
+  async headers() {
     return [
       {
         source: '/(.*)',
@@ -45,8 +45,13 @@ const nextConfig = {
     ];
   },
   // Configure redirects
-  redirects: async () => {
+  async redirects() {
     return [
+      {
+        source: '/admin',
+        destination: '/admin/',
+        permanent: true,
+      },
       {
         source: '/admin/dashboard',
         destination: '/admin/dashboard/',
