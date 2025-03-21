@@ -17,6 +17,23 @@ export async function POST(request: NextRequest) {
       envPassword: process.env.ADMIN_PASSWORD
     });
     
+    // Return debug information in the response for testing
+    if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_AUTH === 'true') {
+      return NextResponse.json({
+        success: false,
+        debug: {
+          providedUsername: username,
+          configUsername: authConfig.adminUsername,
+          providedPassword: password,
+          configPassword: authConfig.adminPassword,
+          envUsername: process.env.ADMIN_USERNAME,
+          envPassword: process.env.ADMIN_PASSWORD,
+          match: username === authConfig.adminUsername && password === authConfig.adminPassword
+        },
+        message: 'Authentication failed - Debug mode'
+      }, { status: 401 });
+    }
+    
     // Simple authentication check against config values
     if (username !== authConfig.adminUsername || password !== authConfig.adminPassword) {
       return errorResponse('Ugyldig brukernavn eller passord', 401);
