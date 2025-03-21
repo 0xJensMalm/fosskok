@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 // Cookie name for authentication
@@ -11,6 +11,26 @@ const ADMIN_PASSWORD = 'fosskok2023';
 // Validate login credentials
 export function validateCredentials(username: string, password: string): boolean {
   return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+}
+
+// Check if user is authenticated from request
+export function isAuthenticatedFromRequest(request: NextRequest): boolean {
+  const authCookie = request.cookies.get(AUTH_COOKIE);
+  return authCookie?.value === 'true';
+}
+
+// Auth middleware wrapper for API routes
+export function authMiddleware(handler: (req: NextRequest) => Promise<NextResponse>) {
+  return async (req: NextRequest) => {
+    if (!isAuthenticatedFromRequest(req)) {
+      return NextResponse.json(
+        { success: false, message: 'Ikke autentisert' },
+        { status: 401 }
+      );
+    }
+    
+    return handler(req);
+  };
 }
 
 // Set authentication cookie
