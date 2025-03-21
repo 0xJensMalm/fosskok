@@ -7,57 +7,30 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password } = await request.json();
     
-    // Debug log to see what values are being compared
-    console.log('Login attempt:', {
-      providedUsername: username,
+    console.log('Login attempt received:', { username });
+    
+    // Direct credential check without MongoDB
+    // Using environment variables directly
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'fosskok2025';
+    
+    console.log('Comparing with:', { 
+      adminUsername, 
       configUsername: authConfig.adminUsername,
-      providedPassword: password,
-      configPassword: authConfig.adminPassword,
-      envUsername: process.env.ADMIN_USERNAME,
-      envPassword: process.env.ADMIN_PASSWORD
+      match: username === adminUsername && password === adminPassword
     });
     
-    // TEMPORARY: Always authenticate successfully for testing
-    // Create response with success message
-    const response = NextResponse.json({ 
-      success: true,
-      message: 'Innlogging vellykket (Test Mode)',
-      debug: {
-        providedUsername: username,
-        configUsername: authConfig.adminUsername,
-        providedPassword: password,
-        configPassword: authConfig.adminPassword,
-        envUsername: process.env.ADMIN_USERNAME,
-        envPassword: process.env.ADMIN_PASSWORD,
-        match: username === authConfig.adminUsername && password === authConfig.adminPassword
-      }
-    });
-    
-    // Set auth cookie using our utility function
-    return setAuthCookie(response);
-    
-    /* Original authentication code - commented out for testing
-    // Return debug information in the response for testing
-    if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_AUTH === 'true') {
-      return NextResponse.json({
-        success: false,
-        debug: {
-          providedUsername: username,
-          configUsername: authConfig.adminUsername,
-          providedPassword: password,
-          configPassword: authConfig.adminPassword,
-          envUsername: process.env.ADMIN_USERNAME,
-          envPassword: process.env.ADMIN_PASSWORD,
-          match: username === authConfig.adminUsername && password === authConfig.adminPassword
-        },
-        message: 'Authentication failed - Debug mode'
+    // Simple authentication check against direct env values
+    if (username !== adminUsername || password !== adminPassword) {
+      console.log('Authentication failed');
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Ugyldig brukernavn eller passord',
+        debug: true
       }, { status: 401 });
     }
     
-    // Simple authentication check against config values
-    if (username !== authConfig.adminUsername || password !== authConfig.adminPassword) {
-      return errorResponse('Ugyldig brukernavn eller passord', 401);
-    }
+    console.log('Authentication successful');
     
     // Create response with success message
     const response = NextResponse.json({ 
@@ -67,8 +40,8 @@ export async function POST(request: NextRequest) {
     
     // Set auth cookie using our utility function
     return setAuthCookie(response);
-    */
   } catch (error) {
+    console.error('Login error:', error);
     return handleApiError(error);
   }
 }
