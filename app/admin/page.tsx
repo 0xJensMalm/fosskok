@@ -17,7 +17,7 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('/api/admin/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,13 +27,14 @@ export default function AdminLogin() {
 
       if (response.ok) {
         // Login successful, redirect to admin dashboard
-        router.push('/admin/dashboard');
+        router.push('/admin/dashboard/');
       } else {
         const data = await response.json();
         setError(data.message || 'Innlogging mislyktes. Prøv igjen.');
       }
     } catch (err) {
       setError('En feil oppstod. Vennligst prøv igjen senere.');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

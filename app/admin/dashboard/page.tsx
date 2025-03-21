@@ -14,17 +14,17 @@ export default function AdminDashboard() {
     // Check if user is authenticated
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/admin/check-auth');
+        const response = await fetch('/api/admin/check-auth/');
         if (!response.ok) {
           // Not authenticated, redirect to login
-          router.push('/admin');
+          router.push('/admin/');
           return;
         }
         
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Authentication check failed:', error);
-        router.push('/admin');
+        router.push('/admin/');
       } finally {
         setLoading(false);
       }
@@ -35,8 +35,8 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/admin/logout', { method: 'POST' });
-      router.push('/admin');
+      await fetch('/api/admin/logout/', { method: 'POST' });
+      router.push('/admin/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
@@ -66,16 +66,16 @@ export default function AdminDashboard() {
       <div className={styles.content}>
         <div className={styles.sidebar}>
           <nav className={styles.nav}>
-            <Link href="/admin/dashboard" className={styles.navLink}>
+            <Link href="/admin/dashboard/" className={styles.navLink}>
               Dashboard
             </Link>
-            <Link href="/admin/dashboard/members" className={styles.navLink}>
+            <Link href="/admin/dashboard/members/" className={styles.navLink}>
               Medlemmer
             </Link>
-            <Link href="/admin/dashboard/events" className={styles.navLink}>
+            <Link href="/admin/dashboard/events/" className={styles.navLink}>
               Arrangementer
             </Link>
-            <Link href="/admin/dashboard/blog" className={styles.navLink}>
+            <Link href="/admin/dashboard/blog/" className={styles.navLink}>
               Blogginnlegg
             </Link>
           </nav>
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
             <div className={styles.statCard}>
               <h3>Medlemmer</h3>
               <div className={styles.statValue}>4</div>
-              <Link href="/admin/dashboard/members" className={styles.statLink}>
+              <Link href="/admin/dashboard/members/" className={styles.statLink}>
                 Administrer medlemmer
               </Link>
             </div>
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
             <div className={styles.statCard}>
               <h3>Arrangementer</h3>
               <div className={styles.statValue}>2</div>
-              <Link href="/admin/dashboard/events" className={styles.statLink}>
+              <Link href="/admin/dashboard/events/" className={styles.statLink}>
                 Administrer arrangementer
               </Link>
             </div>
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
             <div className={styles.statCard}>
               <h3>Blogginnlegg</h3>
               <div className={styles.statValue}>1</div>
-              <Link href="/admin/dashboard/blog" className={styles.statLink}>
+              <Link href="/admin/dashboard/blog/" className={styles.statLink}>
                 Administrer blogginnlegg
               </Link>
             </div>
